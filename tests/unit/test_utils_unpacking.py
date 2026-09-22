@@ -191,6 +191,9 @@ class TestUnpackArchives:
         test_zip = self.make_zip_file("test_zip.zip", files)
         unzip_file(test_zip, self.tempdir)
 
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="creating symlinks needs privileges on Windows"
+    )
     def test_unpack_zip_through_symlink_in_destination(self) -> None:
         """Reject a zip member whose path leads through a symlink that
         already exists in the destination and points outside of it."""
