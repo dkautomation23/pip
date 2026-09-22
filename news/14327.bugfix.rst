@@ -1,0 +1,1 @@
+Resolve symlinks when checking that zip members stay inside the target directory.
