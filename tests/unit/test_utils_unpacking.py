@@ -191,6 +191,28 @@ class TestUnpackArchives:
         test_zip = self.make_zip_file("test_zip.zip", files)
         unzip_file(test_zip, self.tempdir)
 
+    def test_unpack_zip_through_symlink_in_destination(self) -> None:
+        """Reject a zip member whose path leads through a symlink that
+        already exists in the destination and points outside of it."""
+        extract_path = os.path.join(self.tempdir, "extract_path")
+        outside_dir = os.path.join(self.tempdir, "outside")
+        os.makedirs(extract_path)
+        os.makedirs(outside_dir)
+        os.symlink(
+            outside_dir,
+            os.path.join(extract_path, "outside_link"),
+            target_is_directory=True,
+        )
+
+        test_zip = self.make_zip_file(
+            "test_zip.zip", [os.path.join("outside_link", "outside.txt")]
+        )
+        with pytest.raises(InstallationError) as e:
+            unzip_file(test_zip, extract_path, flatten=False)
+        assert "trying to install outside target directory" in str(e.value)
+
+        assert not os.path.exists(os.path.join(outside_dir, "outside.txt"))
+
     def test_unpack_tar_failure(self) -> None:
         """
         Test unpacking a *.tar with file containing .. path

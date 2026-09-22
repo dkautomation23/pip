@@ -136,7 +136,13 @@ def unzip_file(filename: str, location: str, flatten: bool = True) -> None:
                 fn = split_leading_dir(name)[1]
             fn = os.path.join(location, fn)
             dir = os.path.dirname(fn)
-            if not is_within_directory(location, fn):
+            # The plain check rejects textual ".." escapes; resolving symlinks
+            # also catches a member whose path is redirected outside by a
+            # symlink already present in the destination. This mirrors the
+            # containment check applied on the tar path.
+            if not is_within_directory(location, fn) or not is_within_directory(
+                location, fn, resolve_symlinks=True
+            ):
                 message = (
                     "The zip file ({}) has a file ({}) trying to install "
                     "outside target directory ({})"
